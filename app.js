@@ -1,5 +1,5 @@
 /* iGo – lõi ứng dụng: trạng thái, điều hướng, hành động */
-const KEY = 'igo.v3';
+const KEY = 'igo.v5';
 const today = ymd(new Date());
 
 function seed() {
@@ -265,14 +265,14 @@ const A = {
     S.license = { no, cls: $('#lcls').value }; save(); closeSheet(); toast('Đã xác nhận bằng lái xe');
     if (d.next) { stack.pop().el.remove(); const t = stack[stack.length - 1]; t.el.style.visibility = ''; t.el.classList.remove('leave'); go('pay'); } else { back(); refresh(); }
   },
-  toPay() { if (!S.license) { toast('Cần xác nhận bằng lái xe trước khi thanh toán'); return go('license', { next: 1 }); } go('pay'); },
+  toPay() { if (!S.license && !featOf(bikeOf(U.bk.bikeId)).nolicense) { toast('Cần xác nhận bằng lái xe trước khi thanh toán'); return go('license', { next: 1 }); } go('pay'); },
   soon: () => toast('Tính năng sẽ sớm có mặt'),
   /* ---- chủ xe ---- */
   post() {
     if (!S.user) return root('welcome');
     if (!S.verified) return go('o_verify', { next: 1 });
     U.f.pname = U.f.pplate = U.f.pcond = null;
-    U.pd = { name: '', type: 'Xe số', plate: '', year: '2022', cc: '110cc', cond: '', photos: [], self: true, deliver: false, avail: {}, brush: 'self', price: 99000, area: '', dist: 'Quận 1', prov: 'TP. Hồ Chí Minh', desc: '' };
+    U.pd = { name: '', type: 'Xe số', plate: '', year: '2022', cc: '110cc', cond: '', photos: [], self: true, deliver: false, avail: {}, brush: 'self', price: 99000, area: '', addr: '', openT: '07:00', closeT: '21:00', deposit: 0, feat: Object.assign({}, FEAT_DEF), extra: [], dist: 'Quận 1', prov: 'TP. Hồ Chí Minh', desc: '' };
     go('o_info');
   },
   idtype(d) { U.f.idt = d.v; refresh(); },
@@ -315,12 +315,17 @@ const A = {
   calNext() { if (!Object.keys(U.pd.avail).length) return toast('Chọn ít nhất 1 ngày cho thuê'); go('o_price'); },
   ppr(d) { const el = $('#pr'); U.pd.price = +el.value; $('#prv').textContent = fmt(U.pd.price); },
   pstep(d) { U.pd.price = Math.max(10000, (U.pd.price || 0) + +d.v); refresh(); },
-  priceNext() { if (!(U.pd.price >= 10000)) return toast('Giá thuê tối thiểu 10.000đ'); U.pd.prov = $('#pprov').value; U.pd.dist = ($('#parea').value || '').trim(); U.pd.area = (U.pd.dist ? U.pd.dist + ', ' : '') + U.pd.prov; U.pd.desc = $('#pdesc').value.trim(); go('o_contract'); },
+  priceNext() { if (!(U.pd.price >= 10000)) return toast('Giá thuê tối thiểu 10.000đ'); U.pd.prov = $('#pprov').value; U.pd.dist = ($('#parea').value || '').trim(); U.pd.area = (U.pd.dist ? U.pd.dist + ', ' : '') + U.pd.prov; U.pd.desc = $('#pdesc').value.trim(); U.pd.addr = ($('#paddr').value || '').trim(); go('o_feat'); },
+  addextra() { const v = ($('#pextra').value || '').trim(); if (!v) return toast('Nhập tên tiện nghi'); if (U.pd.extra.length >= 8) return toast('Tối đa 8 tiện nghi khác'); U.pd.extra.push(v); refresh(); },
+  rmextra(d) { U.pd.extra.splice(+d.i, 1); refresh(); },
+  pf(d) { U.pd.feat[d.k] = !U.pd.feat[d.k]; refresh(); },
+  pdep(d) { U.pd.deposit = +d.v; refresh(); },
+  featNext() { U.pd.openT = $('#popen').value; U.pd.closeT = $('#pclose').value; if (U.pd.closeT <= U.pd.openT) return toast('Giờ trả muộn nhất phải sau giờ nhận xe'); go('o_contract'); },
   agree() { U.f.agree = !U.f.agree; refresh(); },
   publish() {
     if (!U.f.agree) return toast('Hãy xác nhận đã đọc và đồng ý điều khoản');
     const p = U.pd;
-    S.bikes.unshift({ id: 'm' + Date.now(), name: p.name, type: p.type, price: p.price, rating: 0, reviews: 0, plate: p.plate, year: +p.year, cc: p.cc, cond: p.cond || 'Hoạt động ổn định', area: p.area, owner: S.user.name, color: COLORS[Math.floor(Math.random() * COLORS.length)], photos: p.photos, avail: p.avail, self: p.self, deliver: p.deliver, desc: p.desc, mine: true, on: true });
+    S.bikes.unshift({ id: 'm' + Date.now(), name: p.name, type: p.type, price: p.price, rating: 0, reviews: 0, plate: p.plate, year: +p.year, cc: p.cc, cond: p.cond || 'Hoạt động ổn định', area: p.area, addr: p.addr, openT: p.openT, closeT: p.closeT, deposit: p.deposit, feat: p.feat, extra: p.extra, owner: S.user.name, color: COLORS[Math.floor(Math.random() * COLORS.length)], photos: p.photos, avail: p.avail, self: p.self, deliver: p.deliver, desc: p.desc, mine: true, on: true });
     notify('Đăng bài thành công', `${p.name} đã hiển thị cho khách thuê.`, 'check');
     U.f.agree = false; save(); go('o_done');
   },

@@ -36,8 +36,8 @@ function calHtml(cls, act) {
 }
 
 /* ---------- xác thực ---------- */
-SC.welcome = () => `<div class="hero"><div class="mt"></div><div class="bk">${bikeSvg('#e5484d', 'Xe ga', false)}</div>
-  <div class="lg"><b>iGo</b><p>Thuê xe máy, dễ dàng<br><small style="font-weight:500;opacity:.9">An toàn · Minh bạch · Linh hoạt</small></p></div>
+SC.welcome = () => `<div class="hero"><div class="mt"></div>
+  <div class="lg"><img class="lgimg" src="img/logo.png" alt="iGo"><p>Thuê xe máy, dễ dàng<br><small style="font-weight:500;opacity:.9">An toàn · Minh bạch · Linh hoạt</small></p></div>
   <button class="btn" data-a="open" data-n="register">Đăng ký</button>
   <button class="btn o" data-a="open" data-n="login" style="margin-bottom:14px">Đăng nhập</button>
   <div class="sm-t" style="text-align:center;margin-bottom:8px;color:#35507a">Hoặc tiếp tục với</div>
@@ -105,6 +105,11 @@ SC.search = () => `${H('Tìm kiếm xe', `<button class="ib" data-a="filter">${i
   <div class="promo" style="background:#fff3df;color:var(--tx);background-image:none"><div class="sp"><b>Gợi ý cho bạn</b><div class="sm-t mu">Xe hot · Giá tốt · Giao nhanh</div></div>${ico('bulb')}</div>
   <div id="res">${resHtml()}</div></div>`;
 
+const featHtml = b => { const f = featOf(b), dl = b.deliver !== false;
+  const items = FEAT.filter(e => !e[4]).map(([k, i, on, off]) => [f[k], i, on, off]); items.splice(7, 0, [dl, 'truck', 'Giao xe tận nơi (từ 40.000đ)', 'Không giao xe tận nơi']);
+  FEAT.filter(e => e[4] && f[e[0]]).forEach(([k, i, on]) => items.push([true, i, on, '']));
+  (b.extra || []).forEach(t => items.push([true, 'check', esc(t), '']));
+  return `<div class="feats">${items.map(([v, i, on, off]) => `<div class="ft ${v ? '' : 'off'}"><span class="ti">${ico(i)}</span><span>${v ? on : off}</span></div>`).join('')}</div>`; };
 SC.detail = p => {
   const b = bikeOf(p.id); if (!b) return H('Không tìm thấy') + empty('search', 'Xe không còn tồn tại');
   const n = Math.max(1, (b.photos || []).length);
@@ -114,7 +119,11 @@ SC.detail = p => {
   <div style="margin:6px 0 4px">${rating(b)}</div><div class="mu sm-t">${esc(b.area)}</div>
   <div class="row" style="margin:10px 0"><b class="pr" style="font-size:24px">${fmt(b.price)}</b><span class="mu">/ngày</span></div>
   <div class="card"><h2 class="sec" style="margin:0 0 10px">Thông tin xe</h2><div class="spec"><div><span>Biển số</span>${esc(b.plate)}</div><div><span>Năm sản xuất</span>${b.year}</div><div><span>Dung tích</span>${esc(b.cc)}</div><div><span>Tình trạng</span>${esc(b.cond)}</div></div></div>
-  ${b.desc ? `<div class="card"><b>Mô tả</b><p class="mu sm-t" style="margin-top:4px">${esc(b.desc)}</p></div>` : ''}
+  <h2 class="sec">Địa điểm nhận xe</h2>
+  <div class="loc"><span class="ti">${ico('pin')}</span><div><b>${esc(whereOf(b))}</b><small>Giờ nhận: ${b.openT || '07:00'} — Trả muộn nhất ${b.closeT || '21:00'}</small></div></div>
+  <div class="loc"><span class="ti g">${ico('wallet')}</span><div><b>${b.deposit ? 'Đặt cọc ' + fmt(b.deposit) : 'Không cọc'}</b><small>${b.deposit ? 'Hoàn lại khi trả xe đúng tình trạng.' : 'Chủ xe không yêu cầu đặt cọc khi nhận xe.'}</small></div></div>
+  <h2 class="sec">Đặc điểm & tiện nghi</h2>${featHtml(b)}
+  ${b.desc ? `<div class="card" style="margin-top:12px"><b>Mô tả</b><p class="mu sm-t" style="margin-top:4px">${esc(b.desc)}</p></div>` : ''}
   <div class="card row"><div class="avatar" style="width:44px;height:44px;font-size:18px">${esc(b.owner[0])}</div><div class="sp"><b>${esc(b.owner)}</b><div class="sm-t mu">Chủ xe · Phản hồi nhanh</div></div><button class="ib" data-a="open" data-n="chat" data-p='{"who":"owner"}'>${ico('chat')}</button></div>
   <div class="card bd row sm-t mu">${ico('shield')}<span>Xe được bảo hiểm cơ bản, kèm 2 mũ bảo hiểm. Hủy miễn phí trước 24 giờ.</span></div></div>
   ${bottom(`<div><div class="sm-t mu">Giá từ</div><b class="pr" style="font-size:18px">${fmtK(b.price)}/ngày</b></div><button class="btn" data-a="book" data-id="${b.id}">Đặt thuê</button>`)}`;
@@ -136,7 +145,7 @@ SC.duration = () => {
 SC.pickup = () => {
   const bk = U.bk, b = bikeOf(bk.bikeId);
   return `${H('Phương thức nhận xe')}<div class="body">
-  ${b.self !== false ? optBtn(bk.method === 'self', 'method', 'data-v="self"', 'hand', 'Tự đi lấy', `Tại địa điểm của chủ xe (${esc(b.area)})`, '') : ''}
+  ${b.self !== false ? optBtn(bk.method === 'self', 'method', 'data-v="self"', 'hand', 'Tự đi lấy', `Tại địa điểm của chủ xe (${esc(whereOf(b))})`, '') : ''}
   ${b.deliver !== false ? optBtn(bk.method === 'deliver', 'method', 'data-v="deliver"', 'truck', 'Giao tận nơi', 'Chủ xe giao xe đến địa điểm của bạn · 1–3km: 40.000đ · trên 3km: 60.000đ') : ''}
   ${bk.method === 'deliver' ? `<div class="field"><label>Địa chỉ nhận xe</label><input class="inp" id="addr" value="${esc(bk.address)}" placeholder="Số nhà, đường, quận…"></div><h2 class="sec" style="margin-top:0">Khoảng cách giao xe</h2>${optBtn(bk.dist !== 'far', 'dist', 'data-v="near"', 'pin', 'Từ 1 – 3 km', 'Phí giao xe một lượt', '<b class="pr">40.000đ</b>')}${optBtn(bk.dist === 'far', 'dist', 'data-v="far"', 'pin', 'Trên 3 km', 'Phí giao xe một lượt', '<b class="pr">60.000đ</b>')}` : ''}</div>
   ${bottom('<button class="btn" data-a="toDate">Tiếp tục</button>')}`;
@@ -157,8 +166,8 @@ SC.confirm = () => {
   const bk = U.bk, b = bikeOf(bk.bikeId), q = quote(bk, b), end = addDays(bk.start, bk.days - 1);
   return `${H('Xác nhận đơn thuê')}<div class="body">
   <div class="bike-card" style="cursor:default"><div class="im" style="width:80px;height:70px">${photo(b)}</div><div class="inf"><h3>${esc(b.name)}</h3><b class="pr">${fmt(b.price)}/ngày</b></div></div>
-  <div class="card"><div class="sum"><span class="mu">Thời gian thuê</span><b>${dmy(bk.start)} – ${dmy(end)}</b></div><div class="sum"><span class="mu">Giờ</span><b>${bk.time} – ${bk.rtime}</b></div><div class="sum"><span class="mu">Nhận xe</span><b style="text-align:right;max-width:60%">${bk.method === 'self' ? 'Tự đi lấy' : 'Giao tận nơi'}<br><small class="mu" style="font-weight:500">${esc(bk.method === 'self' ? b.area : bk.address)}</small></b></div></div>
-  ${S.license ? '' : `<div class="card row sm-t" style="background:#fff3d1">${ico('shield')}<span class="sp">Bạn cần xác nhận bằng lái xe trước khi thanh toán.</span></div>`}<div class="card"><div class="sum"><span class="mu">Giá thuê (${bk.days} ngày)</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}${q.ship ? `<div class="sum"><span class="mu">Phí giao xe (${bk.dist === 'far' ? 'trên 3km' : '1–3km'})</span><span>${fmt(q.ship)}</span></div>` : ''}<div class="sum t"><span>Tổng tiền</span><span class="pr">${fmt(q.total)}</span></div></div></div>
+  <div class="card"><div class="sum"><span class="mu">Thời gian thuê</span><b>${dmy(bk.start)} – ${dmy(end)}</b></div><div class="sum"><span class="mu">Giờ</span><b>${bk.time} – ${bk.rtime}</b></div><div class="sum"><span class="mu">Nhận xe</span><b style="text-align:right;max-width:60%">${bk.method === 'self' ? 'Tự đi lấy' : 'Giao tận nơi'}<br><small class="mu" style="font-weight:500">${esc(bk.method === 'self' ? whereOf(b) : bk.address)}</small></b></div></div>
+  ${S.license || featOf(b).nolicense ? '' : `<div class="card row sm-t" style="background:#fff3d1">${ico('shield')}<span class="sp">Bạn cần xác nhận bằng lái xe trước khi thanh toán.</span></div>`}<div class="card"><div class="sum"><span class="mu">Giá thuê (${bk.days} ngày)</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}${q.ship ? `<div class="sum"><span class="mu">Phí giao xe (${bk.dist === 'far' ? 'trên 3km' : '1–3km'})</span><span>${fmt(q.ship)}</span></div>` : ''}<div class="sum t"><span>Tổng tiền</span><span class="pr">${fmt(q.total)}</span></div></div></div>
   ${bottom('<button class="btn g" data-a="edit" style="flex:.8">Sửa thông tin</button><button class="btn" data-a="toPay">Tiếp tục</button>')}`;
 };
 
@@ -196,12 +205,12 @@ SC.cancel = p => { const b = S.bookings.find(x => x.id === p.id), bike = bikeOf(
   ${bottom(`<button class="btn g" data-a="back" style="flex:.7">Giữ đơn</button><button class="btn ${U.f.reason ? '' : 'dis'}" data-a="cancelok" data-id="${b.id}" style="background:var(--err)">Xác nhận hủy</button>`)}`; };
 
 SC.guide = p => { const b = S.bookings.find(x => x.id === p.id), bike = bikeOf(b.bikeId); return `${H('Hướng dẫn nhận xe')}<div class="body">
-  <div class="card">${optBtn(true, 'soon', '', 'pin', b.method === 'self' ? 'Địa điểm nhận xe' : 'Địa chỉ giao xe', esc(b.method === 'self' ? bike.area : b.address)).replace('<span class="rd"><svg', '<span class="rd" style="display:none"><svg')}</div>
+  <div class="card">${optBtn(true, 'soon', '', 'pin', b.method === 'self' ? 'Địa điểm nhận xe' : 'Địa chỉ giao xe', esc(b.method === 'self' ? whereOf(bike) : b.address)).replace('<span class="rd"><svg', '<span class="rd" style="display:none"><svg')}</div>
   <h2 class="sec">Hướng dẫn</h2><div class="card"><ol style="padding-left:20px;line-height:1.9;font-size:14px"><li>Xuất trình mã đơn <b>${b.code}</b></li><li>Kiểm tra tình trạng xe trước khi nhận</li><li>Chụp ảnh xe (mọi góc) để đối chiếu khi trả</li><li>Ký biên bản bàn giao và nhận chìa khóa</li></ol></div>
   <button class="btn" data-a="picked" data-id="${b.id}">Đã nhận xe</button><p class="pr b" style="text-align:center;margin-top:12px;font-size:14px" data-a="open" data-n="help">Cần hỗ trợ? Liên hệ ngay</p></div>`; };
 
 SC.ret = p => { const b = S.bookings.find(x => x.id === p.id), bike = bikeOf(b.bikeId); return `${H('Trả xe')}<div class="body">
-  <div class="card"><div class="sum"><span class="mu">Địa điểm trả xe</span><b>${esc(bike.area)}</b></div><div class="sum"><span class="mu">Thời gian dự kiến</span><b>${b.rtime} – ${dmy(b.end)}</b></div></div>
+  <div class="card"><div class="sum"><span class="mu">Địa điểm trả xe</span><b style="text-align:right;max-width:60%">${esc(whereOf(bike))}</b></div><div class="sum"><span class="mu">Thời gian dự kiến</span><b>${b.rtime} – ${dmy(b.end)}</b></div></div>
   <div class="card bd row sm-t mu">${ico('bulb')}<span>Vui lòng trả xe đúng giờ để tránh phụ phí. Đổ đầy xăng như lúc nhận (nếu có).</span></div>
   <button class="btn" data-a="returned" data-id="${b.id}">Đã trả xe</button></div>`; };
 
@@ -283,14 +292,25 @@ SC.o_price = () => { const d = U.pd, r = PRICE_RANGE[d.type];
   <b class="pr" id="prv">${fmt(d.price)}</b><div class="sm-t mu" style="margin-top:6px">Gợi ý cho ${d.type.toLowerCase()}: ${fmtK(r[0])} – ${fmtK(r[1])}/ngày</div></div>
   ${d.deliver ? `<div class="card row"><span class="sp">Giao tận nơi</span><b class="pr" style="text-align:right;font-size:13px">1–3km: 40.000đ<br>&gt;3km: 60.000đ</b></div>` : ''}
   <div class="field"><label>Tỉnh / Thành phố</label><select class="inp" id="pprov">${PROVINCES.map(p => `<option ${d.prov === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
-  <div class="field"><label>Quận / Huyện / Địa chỉ lấy xe</label><input class="inp" id="parea" value="${esc(d.dist)}" placeholder="Quận 1"></div>
+  <div class="field"><label>Quận / Huyện</label><input class="inp" id="parea" value="${esc(d.dist)}" placeholder="Quận 1"></div>
+  <div class="field"><label>Địa chỉ nhận xe (số nhà, đường)</label><input class="inp" id="paddr" value="${esc(d.addr)}" placeholder="13 Nguyễn Đức Cảnh"></div>
   <div class="field"><label>Mô tả (tùy chọn)</label><textarea class="inp" id="pdesc" placeholder="Xe êm, tiết kiệm xăng, phù hợp đi làm, đi lại…">${esc(d.desc)}</textarea></div>
   <div class="card bd row sm-t mu">${ico('bulb')}<span>Giá gợi ý giúp xe dễ được thuê hơn. Bạn có thể đặt giá tùy ý và đổi lại sau.</span></div></div>${bottom('<button class="btn" data-a="priceNext">Tiếp tục</button>')}`; };
+
+SC.o_feat = () => { const d = U.pd, sel = (id, v) => `<select class="inp" id="${id}">${TIMES.map(t => `<option ${t === v ? 'selected' : ''}>${t}</option>`).join('')}</select>`;
+  const ft = FEAT.map(([k, i, on, off]) => `<button class="ft ${d.feat[k] ? '' : 'off'}" data-a="pf" data-k="${k}"><span class="ti">${ico(i)}</span><span>${d.feat[k] ? on : off}</span></button>`).join('');
+  return `${H('Đặc điểm & tiện nghi')}<div class="body">${stepper(2)}
+  <div class="row"><div class="field sp"><label>Giờ nhận xe từ</label>${sel('popen', d.openT)}</div><div class="field sp"><label>Trả muộn nhất</label>${sel('pclose', d.closeT)}</div></div>
+  <h2 class="sec" style="margin-top:0">Đặt cọc</h2><div class="chips" style="margin-bottom:12px">${[[0, 'Không cọc'], [500000, '500.000đ'], [1000000, '1.000.000đ'], [2000000, '2.000.000đ']].map(([v, l]) => `<button class="chip ${d.deposit === v ? 'on' : ''}" data-a="pdep" data-v="${v}">${l}</button>`).join('')}</div>
+  <h2 class="sec" style="margin-top:0">Chạm để bật / tắt tiện nghi</h2><div class="feats">${ft}</div>
+  <h2 class="sec">Tiện nghi khác</h2><div class="row"><input class="inp" id="pextra" maxlength="40" placeholder="VD: Tặng khăn trùm đầu" style="flex:1"><button class="btn sm" data-a="addextra">Thêm</button></div>
+  <div class="chips" style="flex-wrap:wrap;margin-top:10px">${d.extra.map((t, i) => `<button class="chip on" data-a="rmextra" data-i="${i}">${esc(t)} ✕</button>`).join('')}</div>
+  <div class="card bd sm-t mu" style="margin-top:12px">Mục "Giao xe tận nơi" lấy theo hình thức cho thuê đã chọn ở bước trước.</div></div>${bottom('<button class="btn" data-a="featNext">Tiếp tục</button>')}`; };
 
 SC.o_contract = () => { const d = U.pd, ok = U.f.agree, days = Object.keys(d.avail).length;
   return `${H('Hợp đồng cho thuê xe')}<div class="body">${stepper(3)}
   <div class="card"><div style="text-align:center;color:var(--pt)">${ico('doc')}</div><b style="display:block;text-align:center;margin:4px 0 10px">Hợp đồng cho thuê xe iGo</b>
-  <div class="sum"><span class="mu">Xe</span><b>${esc(d.name)}</b></div><div class="sum"><span class="mu">Biển số</span><b>${esc(d.plate)}</b></div><div class="sum"><span class="mu">Giá thuê</span><b class="pr">${fmt(d.price)}/ngày</b></div><div class="sum"><span class="mu">Hình thức</span><b>${[d.self && 'Tự lấy', d.deliver && 'Giao tận nơi'].filter(Boolean).join(' + ')}</b></div><div class="sum"><span class="mu">Số ngày mở cho thuê</span><b>${days} ngày</b></div></div>
+  <div class="sum"><span class="mu">Xe</span><b>${esc(d.name)}</b></div><div class="sum"><span class="mu">Biển số</span><b>${esc(d.plate)}</b></div><div class="sum"><span class="mu">Giá thuê</span><b class="pr">${fmt(d.price)}/ngày</b></div><div class="sum"><span class="mu">Hình thức</span><b>${[d.self && 'Tự lấy', d.deliver && 'Giao tận nơi'].filter(Boolean).join(' + ')}</b></div><div class="sum"><span class="mu">Đặt cọc</span><b>${d.deposit ? fmt(d.deposit) : 'Không cọc'}</b></div><div class="sum"><span class="mu">Số ngày mở cho thuê</span><b>${days} ngày</b></div></div>
   <div class="card">${['Phân chia trách nhiệm hai bên', 'Quy định hủy / hoàn tiền', 'Bảo hiểm (nếu có)', 'Cam kết tình trạng xe'].map(t => `<div class="row" style="padding:5px 0"><span class="ok">${ico('check')}</span>${t}</div>`).join('')}</div>
   <button class="chk ${ok ? 'on' : ''}" data-a="agree"><span class="bx">${ico('check')}</span><span>Tôi đã đọc và đồng ý với các điều khoản</span></button></div>${bottom(`<button class="btn ${ok ? '' : 'dis'}" data-a="publish">Xác nhận & đăng bài</button>`)}`; };
 

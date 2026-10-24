@@ -265,3 +265,18 @@ input[type=range],.sw{accent-color:#6cc3f2}
 .promo b{color:#fff}
 .hero .bk{bottom:auto;top:110px}.hero .mt{bottom:auto;top:170px}
 .promo[style*="fff3df"] b{color:var(--pt)}
+
+.logo-side{width:170px;height:170px;border-radius:38px;box-shadow:0 14px 34px rgba(138,80,19,.25);display:block}
+.hero .lg .lgimg{width:128px;height:128px;border-radius:30px;box-shadow:0 10px 26px rgba(138,80,19,.3);display:block;margin:0 auto 10px}
+.hero .lg p{margin-top:0}
+.loc{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid var(--ln);border-radius:20px;padding:14px;margin-bottom:10px}
+.loc .ti{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none;background:#fdeee3;color:#e8660d}
+.loc .ti.g{background:#e4f8ef;color:#1a8a5a}
+.loc b{display:block;font-size:15px}.loc small{color:var(--mu);font-size:13px}
+.feats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ft{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--ln);border-radius:16px;padding:10px;font-size:13px;font-weight:600;line-height:1.25;text-align:left;width:100%}
+.ft .ti{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;flex:none;background:#e4f8ef;color:#1a8a5a}
+.ft .ti svg{width:19px;height:19px}
+.ft.off{background:#f1ede8;color:#85786a;border-color:#ece4da}
+.ft.off .ti{background:#e2dcd4;color:#85786a}
+button.ft{cursor:pointer}

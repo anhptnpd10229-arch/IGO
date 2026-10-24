@@ -33,6 +33,17 @@ const IC = {
   edit: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
   eye: 'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z',
   trash: 'M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14',
+  fuel: 'M4 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h12M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V9l-3-3M6 8h6',
+  mountain: 'M3 19l6-12 4 7 2-3 6 8z',
+  users: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 21a7 7 0 0 1 14 0M17 4a3.5 3.5 0 0 1 0 7M22 21a7 7 0 0 0-4-6',
+  gauge: 'M12 21a9 9 0 1 1 9-9M12 12l4-4',
+  umbrella: 'M12 3a9 9 0 0 0-9 9h18a9 9 0 0 0-9-9zM12 12v7a2 2 0 0 0 4 0',
+  tablet: 'M7 2h10a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zM12 18h.01',
+  wallet: 'M3 7a2 2 0 0 1 2-2h13v4M3 7v11a2 2 0 0 0 2 2h15V9H5a2 2 0 0 1-2-2zM16 14h.01',
+  shieldcheck: 'M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6zM9 12l2 2 4-4',
+  box: 'M3 8l9-5 9 5v8l-9 5-9-5zM3 8l9 5 9-5M12 13v8',
+  compass: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM15 9l-2 5-4 1 2-5z',
+  bolt: 'M13 2L4 14h7l-1 8 9-12h-7z',
   bulb: 'M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5V16h8v-2.5A6 6 0 0 0 12 3z'
 };
 const ico = (n, cls = '') => n === 'star'
@@ -70,6 +81,26 @@ const SEED_BIKES = [
   { id: 'b7', name: 'Honda Winner X', type: 'Xe côn tay', price: 150000, rating: 4.8, reviews: 41, plate: '59F9-333.44', year: 2022, cc: '150cc', cond: 'Thể thao, đèn LED', area: 'Nha Trang, Khánh Hòa', owner: 'Bùi Hải G', color: COLORS[2], photos: ['img/b7.jpg'], on: true },
   { id: 'b8', name: 'Yamaha Mio S 125', type: 'Xe ga', price: 115000, rating: 4.5, reviews: 33, plate: '59K2-555.66', year: 2021, cc: '125cc', cond: 'Nhỏ gọn, nhẹ nhàng', area: 'Ninh Kiều, Cần Thơ', owner: 'Hồ Mỹ H', color: COLORS[7], photos: ['img/b8.jpg'], on: true }
 ];
+const FEAT = [
+  ['fuel', 'fuel', 'Tặng nhiên liệu', 'Không tặng nhiên liệu'],
+  ['anywhere', 'mountain', 'Đi được ngoài nội thành', 'Chỉ trong nội thành'],
+  ['two', 'users', 'Cho phép chở 2 người', 'Chỉ chở 1 người'],
+  ['unlimited', 'gauge', 'Không giới hạn km', 'Có giới hạn km'],
+  ['helmet', 'shieldcheck', 'Có sẵn mũ bảo hiểm', 'Không kèm mũ bảo hiểm'],
+  ['raincoat', 'umbrella', 'Kèm áo mưa', 'Không kèm áo mưa'],
+  ['holder', 'tablet', 'Có giá gắn điện thoại', 'Không có giá gắn điện thoại'],
+  ['nolicense', 'shieldcheck', 'Không yêu cầu bằng lái', 'Yêu cầu bằng lái'],
+  ['trunk', 'box', 'Cốp rộng đựng đồ', 'Không có cốp rộng', 1],
+  ['antitheft', 'lock', 'Có khóa chống trộm', 'Không có khóa chống trộm', 1],
+  ['gps', 'compass', 'Có định vị GPS', 'Không có định vị GPS', 1],
+  ['usb', 'bolt', 'Có cổng sạc USB', 'Không có cổng sạc USB', 1],
+  ['abs', 'shieldcheck', 'Phanh ABS', 'Không có phanh ABS', 1],
+  ['insurance', 'shield', 'Có bảo hiểm xe', 'Không có bảo hiểm xe', 1],
+  ['rescue', 'phone', 'Hỗ trợ cứu hộ 24/7', 'Không hỗ trợ cứu hộ', 1]
+];
+const FEAT_DEF = { fuel: false, anywhere: false, two: true, unlimited: true, helmet: true, raincoat: false, holder: false, nolicense: false, trunk: false, antitheft: false, gps: false, usb: false, abs: false, insurance: false, rescue: false };
+const featOf = b => Object.assign({}, FEAT_DEF, b.feat || {});
+const whereOf = b => (b.addr ? b.addr + ', ' : '') + b.area;
 const PRICE_RANGE = { 'Xe số': [99000, 115000], 'Xe ga': [110000, 140000], 'Xe côn tay': [130000, 150000] };
 const STATUS = ['Đã đặt thuê', 'Đang xử lý', 'Sẵn sàng nhận xe', 'Đang thuê', 'Đã trả xe'];
 const FAQ = [
@@ -91,3 +122,11 @@ const PROVINCES = ['Hà Nội', 'TP. Hồ Chí Minh', 'Hải Phòng', 'Đà Nẵ
   'Đắk Lắk', 'Đồng Nai', 'Tây Ninh', 'Vĩnh Long', 'Đồng Tháp', 'Cà Mau', 'An Giang', 'Điện Biên', 'Lai Châu', 'Sơn La', 'Lạng Sơn', 'Cao Bằng',
   'Quảng Ninh', 'Thanh Hóa', 'Nghệ An', 'Hà Tĩnh'];
 const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
+
+(() => {
+  const addr = ['13 Nguyễn Đức Cảnh', '25 Lý Chính Thắng', '102 Nguyễn Thị Thập', '48 Nguyễn Văn Linh', '7 Trần Duy Hưng', '18 Liễu Giai', '36 Trần Phú', '55 Hùng Vương'];
+  const feats = [{ two: true, helmet: true, fuel: true }, { holder: true, helmet: true }, { raincoat: true, helmet: true, holder: true }, { two: true, helmet: true, anywhere: true }, { anywhere: true, unlimited: true, helmet: true }, { two: true, helmet: true, raincoat: true }, { anywhere: true, helmet: true, holder: true }, { two: true, helmet: true }];
+  SEED_BIKES.forEach((b, i) => { b.addr = addr[i]; b.openT = '07:00'; b.closeT = i % 3 === 2 ? '22:00' : '21:00'; b.deposit = i % 4 === 1 ? 500000 : 0; b.feat = feats[i]; });
+})();
+
+SEED_BIKES.forEach((b, i) => { Object.assign(b.feat, { insurance: true, rescue: i % 2 === 0, antitheft: i % 3 === 0, trunk: b.type === 'Xe ga', usb: i === 2 || i === 5, abs: b.type === 'Xe côn tay', gps: i === 4 }); if (i === 2) b.extra = ['Tặng khăn trùm đầu', 'Có ngăn đựng áo mưa']; if (i === 0) b.extra = ['Giao nhận linh hoạt giờ hành chính']; });
