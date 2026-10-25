@@ -1,5 +1,5 @@
 /* iGo – lõi ứng dụng: trạng thái, điều hướng, hành động */
-const KEY = 'igo.v5';
+const KEY = 'igo.v6';
 const today = ymd(new Date());
 
 function seed() {
@@ -24,7 +24,7 @@ let S = load();
 function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { toast('Bộ nhớ đầy – hãy dùng ảnh nhỏ hơn'); } }
 
 /* trạng thái tạm (không lưu) */
-const U = { area: '', f: {}, q: '', type: 'Tất cả', sort: 'best', maxP: 150000, rt: 0, ot: 0, bk: null, pd: null, ids: {}, cal: null, faq: -1 };
+const U = { area: '', f: {}, q: '', type: 'Tất cả', sort: 'best', maxP: 250000, rt: 0, ot: 0, bk: null, pd: null, ids: {}, cal: null, faq: -1 };
 
 const $ = s => stack.length ? stack[stack.length - 1].el.querySelector(s) : null;
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -95,7 +95,8 @@ function quote(bk, bike) {
   const disc = bk.days >= 7 ? 0.055 : bk.days >= 3 ? 0.04 : 0;
   const rent = Math.round(base * (1 - disc) / 1000) * 1000;
   const ship = bk.method === 'deliver' ? (bk.dist === 'far' ? 60000 : 40000) : 0;
-  return { base, disc, rent, ship, total: rent + ship };
+  const ins = bk.ins ? 15000 * bk.days : 0;
+  return { base, disc, rent, ship, ins, total: rent + ship + ins };
 }
 function dayOk(bike, d, method) {
   if (!bike.avail) return true;
@@ -167,23 +168,24 @@ const A = {
     openSheet(`<h3>Lọc & sắp xếp</h3><div class="b sm-t mu" style="margin-bottom:8px">Sắp xếp</div>
       <div class="chips" style="flex-wrap:wrap;margin-bottom:16px">${sorts.map(([k, l]) => `<button class="chip ${U.sort === k ? 'on' : ''}" data-a="sort" data-v="${k}">${l}</button>`).join('')}</div>
       <div class="row"><span class="b sm-t mu">Giá tối đa / ngày</span><span class="sp"></span><b class="pr" id="mp">${fmt(U.maxP)}</b></div>
-      <input type="range" min="99000" max="150000" step="1000" value="${U.maxP}" data-in="maxP">
+      <input type="range" min="50000" max="250000" step="5000" value="${U.maxP}" data-in="maxP">
       <div class="row" style="margin-top:14px"><button class="btn g" data-a="fclear">Đặt lại</button><button class="btn" data-a="sheetclose">Áp dụng</button></div>`);
   },
   sort(d) { U.sort = d.v; A.filter(); refreshRes(); },
-  fclear() { U.area = ''; U.sort = 'best'; U.maxP = 150000; U.type = 'Tất cả'; closeSheet(); refresh(); },
+  fclear() { U.area = ''; U.sort = 'best'; U.maxP = 250000; U.type = 'Tất cả'; closeSheet(); refresh(); },
   fav(d, ev) {
     ev && ev.stopPropagation();
     const i = S.fav.indexOf(d.id); i < 0 ? S.fav.push(d.id) : S.fav.splice(i, 1); save(); refresh();
   },
   /* đặt thuê */
   book(d) {
-    U.bk = { bikeId: d.id, days: 1, start: today, time: '10:00', rtime: '17:00', method: 'self', dist: 'near', address: 'Quận 1, TP. Hồ Chí Minh', pay: S.defPay || 'momo' };
+    U.bk = { bikeId: d.id, days: 1, start: today, time: '10:00', rtime: '17:00', method: 'self', ins: false, dist: 'near', address: 'Quận 1, TP. Hồ Chí Minh', pay: S.defPay || 'momo' };
     const b = bikeOf(d.id);
     if (b.self === false) U.bk.method = 'deliver';
     go('duration');
   },
   days(d) { U.bk.days = +d.v; refresh(); },
+  ins() { U.bk.ins = !U.bk.ins; refresh(); },
   daysn(d) { U.bk.days = Math.min(90, Math.max(1, U.bk.days + +d.v)); refresh(); },
   dist(d) { U.bk.dist = d.v; refresh(); },
   method(d) { U.bk.method = d.v; refresh(); },
@@ -206,7 +208,7 @@ const A = {
     openSheet(`<div style="text-align:center;padding:24px 0"><div class="spin"></div><b>Đang xử lý thanh toán…</b><div class="mu sm-t" style="margin-top:4px">Vui lòng không đóng ứng dụng</div></div>`);
     await new Promise(r => setTimeout(r, 1400));
     const bk = U.bk, bike = bikeOf(bk.bikeId), q = quote(bk, bike);
-    const b = { id: 'r' + Date.now(), code: newCode(), bikeId: bk.bikeId, days: bk.days, start: bk.start, end: addDays(bk.start, bk.days - 1), time: bk.time, rtime: bk.rtime, method: bk.method, dist: bk.dist, address: bk.address, pay: bk.pay, total: q.total, status: 0, rated: false, at: Date.now() };
+    const b = { id: 'r' + Date.now(), code: newCode(), bikeId: bk.bikeId, days: bk.days, start: bk.start, end: addDays(bk.start, bk.days - 1), time: bk.time, rtime: bk.rtime, method: bk.method, ins: !!bk.ins, dist: bk.dist, address: bk.address, pay: bk.pay, total: q.total, status: 0, rated: false, at: Date.now() };
     S.bookings.unshift(b);
     if (bike.mine) S.ownerOrders.unshift({ id: 'o' + Date.now(), bid: b.id, bike: bike.name, color: bike.color, renter: S.user ? S.user.name : 'Khách', from: b.start, to: b.end, price: b.total, status: 'pending', photo: bike.photos[0] });
     notify('Đặt thuê thành công', `Đơn ${b.code} – ${bike.name} đã được ghi nhận.`, 'check');
@@ -266,6 +268,8 @@ const A = {
     if (d.next) { stack.pop().el.remove(); const t = stack[stack.length - 1]; t.el.style.visibility = ''; t.el.classList.remove('leave'); go('pay'); } else { back(); refresh(); }
   },
   toPay() { if (!S.license && !featOf(bikeOf(U.bk.bikeId)).nolicense) { toast('Cần xác nhận bằng lái xe trước khi thanh toán'); return go('license', { next: 1 }); } go('pay'); },
+  lang(d) { setLang(d.v); refresh(); },
+  langtoggle() { setLang(S.lang === 'en' ? 'vi' : 'en'); refresh(); },
   soon: () => toast('Tính năng sẽ sớm có mặt'),
   /* ---- chủ xe ---- */
   post() {
@@ -380,5 +384,6 @@ setInterval(() => { document.getElementById('clock').textContent = nowT(); }, 30
 document.getElementById('clock').textContent = nowT();
 
 window.addEventListener('load', () => {
+  i18nStart();
   if (!S.user) root('welcome'); else root(S.role === 'owner' ? 'o_home' : 'home');
 });

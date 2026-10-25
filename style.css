@@ -280,3 +280,5 @@ input[type=range],.sw{accent-color:#6cc3f2}
 .ft.off{background:#f1ede8;color:#85786a;border-color:#ece4da}
 .ft.off .ti{background:#e2dcd4;color:#85786a}
 button.ft{cursor:pointer}
+
+.langpill{position:absolute;top:44px;right:14px;z-index:5;background:rgba(255,255,255,.85);border-radius:16px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--pt)}

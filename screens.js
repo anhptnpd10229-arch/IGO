@@ -36,7 +36,7 @@ function calHtml(cls, act) {
 }
 
 /* ---------- xác thực ---------- */
-SC.welcome = () => `<div class="hero"><div class="mt"></div>
+SC.welcome = () => `<div class="hero"><button class="langpill" data-a="langtoggle">🌐 ${S.lang === 'en' ? 'English' : 'Tiếng Việt'}</button><div class="mt"></div>
   <div class="lg"><img class="lgimg" src="img/logo.png" alt="iGo"><p>Thuê xe máy, dễ dàng<br><small style="font-weight:500;opacity:.9">An toàn · Minh bạch · Linh hoạt</small></p></div>
   <button class="btn" data-a="open" data-n="register">Đăng ký</button>
   <button class="btn o" data-a="open" data-n="login" style="margin-bottom:14px">Đăng nhập</button>
@@ -100,7 +100,7 @@ function filtered() {
 const resHtml = () => { const r = filtered(); return `<h2 class="sec" style="margin-top:6px">Kết quả tìm kiếm <span class="mu sm-t" style="font-weight:500">(${r.length} xe)</span></h2>` + (r.length ? r.map(bikeCard).join('') : empty('search', 'Không tìm thấy xe phù hợp')); };
 SC.search = () => `${H('Tìm kiếm xe', `<button class="ib" data-a="filter">${ico('filter')}</button>`)}<div class="body">
   <div class="sbox" style="border:1.5px solid var(--ln)">${ico('search')}<input data-in="q" placeholder="Tên xe, khu vực…" value="${esc(U.q)}"></div>
-  <div class="field" style="margin:10px 0 0"><label>Địa điểm (34 tỉnh, thành phố)</label><input class="inp" list="provs" data-in="area" placeholder="Nhập tỉnh / thành phố…" value="${esc(U.area)}" autocomplete="off"><datalist id="provs">${PROVINCES.map(p => `<option value="${p}">`).join('')}</datalist></div>
+  <div class="field" style="margin:10px 0 0"><label>Địa điểm (tỉnh, thành phố)</label><input class="inp" list="provs" data-in="area" placeholder="Nhập tỉnh / thành phố…" value="${esc(U.area)}" autocomplete="off"><datalist id="provs">${PROVINCES.map(p => `<option value="${p}">`).join('')}</datalist></div>
   <div class="chips" style="margin:12px 0">${['Tất cả', 'Xe số', 'Xe ga', 'Xe côn tay'].map(t => `<button class="chip ${U.type === t ? 'on' : ''}" data-a="type" data-v="${t}">${t}</button>`).join('')}</div>
   <div class="promo" style="background:#fff3df;color:var(--tx);background-image:none"><div class="sp"><b>Gợi ý cho bạn</b><div class="sm-t mu">Xe hot · Giá tốt · Giao nhanh</div></div>${ico('bulb')}</div>
   <div id="res">${resHtml()}</div></div>`;
@@ -130,14 +130,16 @@ SC.detail = p => {
 };
 
 SC.duration = () => {
-  const bk = U.bk, b = bikeOf(bk.bikeId), q = quote({ days: bk.days, method: 'self' }, b);
+  const bk = U.bk, b = bikeOf(bk.bikeId), q = quote({ days: bk.days, method: 'self', ins: bk.ins }, b);
   return `${H('Chọn gói thuê')}<div class="body">
   <div class="bike-card" style="cursor:default"><div class="im" style="width:80px;height:70px">${photo(b)}</div><div class="inf"><h3>${esc(b.name)}</h3><div class="mu sm-t">${esc(b.area)}</div><b class="pr">${fmt(b.price)}/ngày</b></div></div>
   <h2 class="sec">Thời gian thuê</h2>
   <div class="card" style="text-align:center"><div class="mu sm-t">Số ngày thuê (tối đa 90 ngày)</div>
   <div class="stepper"><button data-a="daysn" data-v="-1">−</button><b>${bk.days} ngày</b><button data-a="daysn" data-v="1">+</button></div>
   <div class="chips" style="justify-content:center;flex-wrap:wrap">${[1, 2, 3, 5, 7, 14, 30].map(d => `<button class="chip ${bk.days === d ? 'on' : ''}" data-a="days" data-v="${d}">${d} ngày</button>`).join('')}</div></div>
-  <div class="card"><div class="sum"><span class="mu">Giá thuê</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói (${Math.round(q.disc * 1000) / 10}%)</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}<div class="sum t"><span>Tạm tính</span><span class="pr">${fmt(q.rent)}</span></div></div>
+  <h2 class="sec">Bảo hiểm chuyến đi</h2>
+  ${optBtn(bk.ins, 'ins', '', 'shieldcheck', 'Mua bảo hiểm', 'Hỗ trợ khi xảy ra sự cố, hư hỏng, tai nạn · 15.000đ/ngày', `<b class="pr">+${fmt(15000 * bk.days)}</b>`)}
+  <div class="card"><div class="sum"><span class="mu">Giá thuê</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói (${Math.round(q.disc * 1000) / 10}%)</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}${q.ins ? `<div class="sum"><span class="mu">Bảo hiểm chuyến đi</span><span>${fmt(q.ins)}</span></div>` : ''}<div class="sum t"><span>Tạm tính</span><span class="pr">${fmt(q.rent + q.ins)}</span></div></div>
   <div class="card bd row sm-t mu">${ico('tag')}<span>Thuê từ 3 ngày giảm 4%, từ 7 ngày giảm 5,5%. Giá chưa gồm phí giao xe (nếu có).</span></div></div>
   ${bottom('<button class="btn" data-a="toPickup">Tiếp tục</button>')}`;
 };
@@ -167,7 +169,7 @@ SC.confirm = () => {
   return `${H('Xác nhận đơn thuê')}<div class="body">
   <div class="bike-card" style="cursor:default"><div class="im" style="width:80px;height:70px">${photo(b)}</div><div class="inf"><h3>${esc(b.name)}</h3><b class="pr">${fmt(b.price)}/ngày</b></div></div>
   <div class="card"><div class="sum"><span class="mu">Thời gian thuê</span><b>${dmy(bk.start)} – ${dmy(end)}</b></div><div class="sum"><span class="mu">Giờ</span><b>${bk.time} – ${bk.rtime}</b></div><div class="sum"><span class="mu">Nhận xe</span><b style="text-align:right;max-width:60%">${bk.method === 'self' ? 'Tự đi lấy' : 'Giao tận nơi'}<br><small class="mu" style="font-weight:500">${esc(bk.method === 'self' ? whereOf(b) : bk.address)}</small></b></div></div>
-  ${S.license || featOf(b).nolicense ? '' : `<div class="card row sm-t" style="background:#fff3d1">${ico('shield')}<span class="sp">Bạn cần xác nhận bằng lái xe trước khi thanh toán.</span></div>`}<div class="card"><div class="sum"><span class="mu">Giá thuê (${bk.days} ngày)</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}${q.ship ? `<div class="sum"><span class="mu">Phí giao xe (${bk.dist === 'far' ? 'trên 3km' : '1–3km'})</span><span>${fmt(q.ship)}</span></div>` : ''}<div class="sum t"><span>Tổng tiền</span><span class="pr">${fmt(q.total)}</span></div></div></div>
+  ${S.license || featOf(b).nolicense ? '' : `<div class="card row sm-t" style="background:#fff3d1">${ico('shield')}<span class="sp">Bạn cần xác nhận bằng lái xe trước khi thanh toán.</span></div>`}<div class="card"><div class="sum"><span class="mu">Giá thuê (${bk.days} ngày)</span><span>${fmt(q.base)}</span></div>${q.disc ? `<div class="sum ok"><span>Giảm giá gói</span><span>-${fmt(q.base - q.rent)}</span></div>` : ''}${q.ins ? `<div class="sum"><span class="mu">Bảo hiểm chuyến đi (${bk.days} ngày)</span><span>${fmt(q.ins)}</span></div>` : ''}${q.ship ? `<div class="sum"><span class="mu">Phí giao xe (${bk.dist === 'far' ? 'trên 3km' : '1–3km'})</span><span>${fmt(q.ship)}</span></div>` : ''}<div class="sum t"><span>Tổng tiền</span><span class="pr">${fmt(q.total)}</span></div></div></div>
   ${bottom('<button class="btn g" data-a="edit" style="flex:.8">Sửa thông tin</button><button class="btn" data-a="toPay">Tiếp tục</button>')}`;
 };
 
@@ -246,7 +248,7 @@ SC.profile = () => { const u = S.user || { name: 'Khách', phone: '' }, own = S.
 SC.notifs = () => `${H('Thông báo', `<button class="ib" data-a="readall" title="Đã đọc tất cả">${ico('check')}</button>`)}<div class="body">${S.notifs.map(n => `<div class="ntf ${n.un ? 'un' : ''}" data-a="readn" data-id="${n.id}"><span class="ic">${ico(n.ic)}</span><div class="sp"><b style="font-size:14px">${esc(n.t)}</b><div class="sm-t mu">${esc(n.d)}</div></div>${n.un ? '<i class="dot" style="position:static;width:9px;height:9px;border-radius:50%;background:var(--err)"></i>' : ''}</div>`).join('')}</div>`;
 
 SC.settings = () => { const row = (k, t) => `<div class="mi" style="cursor:default"><span class="sp">${t}</span><button class="sw ${S.settings[k] ? 'on' : ''}" data-a="setting" data-k="${k}"></button></div>`;
-  return `${H('Cài đặt')}<div class="body"><div class="card" style="padding:4px 14px"><div class="mi" style="cursor:default"><span class="sp">Ngôn ngữ</span><span class="mu">Tiếng Việt</span></div>${row('push', 'Thông báo đẩy')}${row('email', 'Thông báo qua email')}${row('sound', 'Âm thanh')}</div>
+  return `${H('Cài đặt')}<div class="body"><div class="card" style="padding:4px 14px"><div class="mi" style="cursor:default"><span class="sp">Ngôn ngữ</span><span class="seg" style="margin:0;width:190px"><button class="${S.lang === 'en' ? '' : 'on'}" data-a="lang" data-v="vi">Tiếng Việt</button><button class="${S.lang === 'en' ? 'on' : ''}" data-a="lang" data-v="en">English</button></span></div>${row('push', 'Thông báo đẩy')}${row('email', 'Thông báo qua email')}${row('sound', 'Âm thanh')}</div>
   <button class="btn err" data-a="logout" style="margin-top:12px">${ico('logout')} Đăng xuất</button><p class="sm-t mu" style="text-align:center;margin-top:16px">iGo · phiên bản 1.0<br>Ảnh xe: Wikimedia Commons (CC BY / BY-SA / CC0) – xem img/CREDITS.md</p></div>`; };
 
 /* ---------- chủ xe ---------- */
@@ -329,8 +331,9 @@ SC.o_home = () => {
 const ostat = { pending: ['w', 'Chờ xác nhận'], active: ['', 'Đang thuê'], done: ['ok', 'Hoàn tất'], cancel: ['e', 'Đã từ chối'] };
 const orderCard = o => `<div class="bike-card" style="cursor:default;align-items:flex-start"><div class="im" style="width:76px;height:68px">${o.photo && !o.photo.startsWith('svg:') ? `<img src="${o.photo}">` : bikeSvg(o.color, 'Xe số')}</div><div class="inf"><div class="row"><h3 class="sp">${esc(o.bike)}</h3><span class="tag ${ostat[o.status][0]}">${ostat[o.status][1]}</span></div><div class="sm-t mu" style="margin:2px 0">Khách: ${esc(o.renter)}</div><div class="sm-t mu">${dmy(o.from)} – ${dmy(o.to)}</div><div class="row" style="margin-top:6px"><b class="pr">${fmt(o.price)}</b><span class="sp"></span>
   ${o.status === 'pending' ? `<button class="btn sm err" data-a="oact" data-id="${o.id}" data-s="cancel" style="height:32px;padding:0 10px">Từ chối</button><button class="btn sm" data-a="oact" data-id="${o.id}" data-s="active" style="height:32px;padding:0 12px">Xác nhận</button>` : o.status === 'active' ? `<button class="btn sm" data-a="oact" data-id="${o.id}" data-s="done" style="height:32px">Hoàn tất</button>` : ''}</div></div></div>`;
-SC.o_orders = () => { const l = S.ownerOrders.filter(o => U.ot === 0 ? o.status === 'pending' || o.status === 'active' : o.status === 'done' || o.status === 'cancel');
-  return `<div class="hdr"><h1 style="text-align:left;padding-left:6px">Quản lý đơn thuê</h1></div><div class="body tabpad"><div class="seg">${['Đang hoạt động', 'Lịch sử'].map((t, i) => `<button class="${U.ot === i ? 'on' : ''}" data-a="ot" data-v="${i}">${t}</button>`).join('')}</div>
+SC.o_orders = () => { const isAct = o => o.status === 'pending' || o.status === 'active', nAct = S.ownerOrders.filter(isAct).length, nHis = S.ownerOrders.length - nAct;
+  const l = S.ownerOrders.filter(o => U.ot === 0 ? isAct(o) : !isAct(o));
+  return `<div class="hdr"><h1 style="text-align:left;padding-left:6px">Quản lý đơn thuê</h1></div><div class="body tabpad"><div class="seg">${[`(${nAct}) Đang hoạt động`, `(${nHis}) Lịch sử`].map((t, i) => `<button class="${U.ot === i ? 'on' : ''}" data-a="ot" data-v="${i}">${t}</button>`).join('')}</div>
   ${l.length ? l.map(orderCard).join('') : empty('orders', 'Chưa có đơn nào')}</div>${tabbar('o_orders')}`; };
 
 SC.info = () => { const u = S.user || { name: '', phone: '', email: '' };

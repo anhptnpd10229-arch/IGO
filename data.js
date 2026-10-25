@@ -120,7 +120,7 @@ const SEED_OWNER_ORDERS = [
 const PROVINCES = ['Hà Nội', 'TP. Hồ Chí Minh', 'Hải Phòng', 'Đà Nẵng', 'Cần Thơ', 'Huế',
   'Tuyên Quang', 'Lào Cai', 'Thái Nguyên', 'Phú Thọ', 'Bắc Ninh', 'Hưng Yên', 'Ninh Bình', 'Quảng Trị', 'Quảng Ngãi', 'Gia Lai', 'Khánh Hòa', 'Lâm Đồng',
   'Đắk Lắk', 'Đồng Nai', 'Tây Ninh', 'Vĩnh Long', 'Đồng Tháp', 'Cà Mau', 'An Giang', 'Điện Biên', 'Lai Châu', 'Sơn La', 'Lạng Sơn', 'Cao Bằng',
-  'Quảng Ninh', 'Thanh Hóa', 'Nghệ An', 'Hà Tĩnh'];
+  'Quảng Ninh', 'Thanh Hóa', 'Nghệ An', 'Hà Tĩnh', 'Phú Yên'];
 const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd');
 
 (() => {
@@ -130,3 +130,30 @@ const norm = x => String(x || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ
 })();
 
 SEED_BIKES.forEach((b, i) => { Object.assign(b.feat, { insurance: true, rescue: i % 2 === 0, antitheft: i % 3 === 0, trunk: b.type === 'Xe ga', usb: i === 2 || i === 5, abs: b.type === 'Xe côn tay', gps: i === 4 }); if (i === 2) b.extra = ['Tặng khăn trùm đầu', 'Có ngăn đựng áo mưa']; if (i === 0) b.extra = ['Giao nhận linh hoạt giờ hành chính']; });
+
+/* 30 xe có sẵn: Ninh Bình, Đồng Tháp, Phú Yên (mỗi tỉnh 10 xe) */
+(() => {
+  const models = [
+    ['Honda Wave 110', 'Xe số', '110cc', 99000, 1], ['Yamaha Jupiter MX 135', 'Xe số', '135cc', 110000, 2], ['Honda Vision 110', 'Xe ga', '110cc', 120000, 3],
+    ['Honda Air Blade 125', 'Xe ga', '125cc', 140000, 4], ['Yamaha Exciter 150', 'Xe côn tay', '150cc', 150000, 5], ['Honda Lead 125', 'Xe ga', '125cc', 130000, 6],
+    ['Honda Winner X', 'Xe côn tay', '150cc', 170000, 7], ['Yamaha Mio S 125', 'Xe ga', '125cc', 115000, 8], ['Honda Air Blade 160', 'Xe ga', '160cc', 190000, 4], ['Yamaha Exciter 155 VVA', 'Xe côn tay', '155cc', 250000, 5]
+  ];
+  const provs = [
+    { k: 'n', p: 'Ninh Bình', code: '35', ds: ['Hoa Lư', 'Tam Điệp', 'Nho Quan', 'Gia Viễn', 'Kim Sơn'], st: ['12 Trần Hưng Đạo', '45 Lương Văn Tụy', '8 Đinh Tiên Hoàng', '27 Nguyễn Huệ', '60 Hoàng Diệu'] },
+    { k: 'd', p: 'Đồng Tháp', code: '66', ds: ['Cao Lãnh', 'Sa Đéc', 'Hồng Ngự', 'Lai Vung', 'Tam Nông'], st: ['21 Nguyễn Huệ', '9 Hùng Vương', '33 Lê Lợi', '76 Trần Phú', '14 Điện Biên Phủ'] },
+    { k: 'p', p: 'Phú Yên', code: '78', ds: ['Tuy Hòa', 'Sông Cầu', 'Đông Hòa', 'Tuy An', 'Sơn Hòa'], st: ['5 Lê Duẩn', '38 Hùng Vương', '17 Trần Hưng Đạo', '52 Nguyễn Huệ', '11 Độc Lập'] }
+  ];
+  const owners = ['Nguyễn Hoàng Nam', 'Trần Thanh Tùng', 'Lê Thị Mai', 'Phạm Minh Khôi', 'Võ Thị Lan', 'Đặng Quốc Bảo', 'Huỳnh Thu Hà', 'Bùi Văn Phúc', 'Ngô Thị Hạnh', 'Dương Gia Huy'];
+  const conds = ['Xe mới, sạch sẽ', 'Máy êm, tiết kiệm xăng', 'Sơn đẹp, bảo dưỡng định kỳ', 'Chạy ổn định, phanh tốt', 'Nhỏ gọn, dễ đi phố'];
+  provs.forEach((P, pi) => models.forEach((m, i) => {
+    const r = (i * 7 + pi * 3) % 10, price = Math.min(250000, m[3] + (m[3] < 200000 ? ((i + pi) % 3 - 1) * 5000 : 0));
+    SEED_BIKES.push({
+      id: P.k + (i + 1), name: m[0], type: m[1], price, rating: +(4.3 + (r % 7) / 10).toFixed(1), reviews: 12 + r * 9 + i * 4,
+      plate: P.code + 'A' + (1 + (i % 9)) + '-' + String(100 + i * 37 + pi * 11).slice(-3) + '.' + String(10 + i * 7 + pi * 5).slice(-2),
+      year: 2020 + (i + pi) % 5, cc: m[2], cond: conds[(i + pi) % conds.length], area: P.ds[i % 5] + ', ' + P.p, addr: P.st[(i + pi) % 5],
+      owner: owners[(i + pi * 2) % owners.length], color: COLORS[(i + pi) % COLORS.length], photos: ['img/b' + m[4] + '.jpg'], on: true,
+      openT: '07:00', closeT: i % 3 === 2 ? '22:00' : '21:00', deposit: (i + pi) % 4 === 1 ? 500000 : 0,
+      feat: { two: true, helmet: true, insurance: true, rescue: (i + pi) % 2 === 0, antitheft: i % 3 === 0, trunk: m[1] === 'Xe ga', abs: m[1] === 'Xe côn tay', usb: i % 4 === 2, gps: m[3] >= 190000, anywhere: i % 2 === 1, unlimited: i % 3 !== 1, raincoat: i % 5 === 0 }
+    });
+  }));
+})();
